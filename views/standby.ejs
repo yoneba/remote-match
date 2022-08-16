@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="/css/button.css">
+    <title>待合室</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module">
+        const socket = io("/standby/");
+
+        socket.on("update", function (participant) {
+            const member_list = document.getElementById("member_list");
+            while (member_list.hasChildNodes()) member_list.firstChild.remove();
+            for (const pl of participant) {
+                member_list.append(document.createElement("li"));
+                member_list.lastElementChild.textContent = pl;
+            }
+            document.getElementById("start_btn").disabled
+             = member_list.childElementCount < <%= minimum %> || member_list.childElementCount > <%= maximum %>;
+        });
+
+        socket.on("start", function () {
+            location.reload();
+        });
+
+        socket.on("disconnect", function (reason) {
+            console.info(reason);
+            if (reason === "io server disconnect")
+                location.pathname = location.pathname.replace(/\/?$/, "/entry");
+        });
+
+        socket.on("connect_error", function (error) {
+            console.error(error);
+        });
+
+        document.getElementById("start_btn").onclick = function (e) {
+            socket.emit("start");
+        };
+
+        document.getElementById("leave_btn").onclick = function (e) {
+            socket.emit("leave");
+        };
+    </script>
+</head>
+<body>
+    <h2><%= room_id %>号室</h2>
+    <fieldset>
+        <legend>参加プレイヤー</legend>
+        <ul id="member_list"></ul>
+    </fieldset>
+    <input type="button" id="start_btn" class="standalonebtn greenbtn" value="スタート">
+    <input type="button" id="leave_btn" class="standalonebtn redbtn" value="退出する">
+</body>
+</html>

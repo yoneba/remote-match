@@ -1,0 +1,47 @@
+@charset "utf-8";
+
+button:disabled, input[type='button']:disabled, input[type='submit']:disabled, input[type='reset']:disabled {
+    background-color: ButtonFace !important;
+    color: GrayText !important;
+    border-color: revert;
+}
+
+.standalonebtn {
+    display: block;
+    margin: 0.3em auto;
+    width: 60%;
+    border-width: thin;
+    border-style: solid;
+    border-radius: 0.1em;
+    font-size: x-large;
+}
+
+.greenbtn {
+    background-color: forestgreen;
+    color: white;
+    border-color: darkgreen;
+}
+
+    .greenbtn:active {
+        background: linear-gradient(limegreen,forestgreen);
+    }
+
+.redbtn {
+    background-color: red;
+    color: white;
+    border-color: darkred;
+}
+
+    .redbtn:active {
+        background: linear-gradient(indianred,red);
+    }
+
+.bluebtn {
+    background-color: royalblue;
+    color: cornsilk;
+    border-color: darkslateblue;
+}
+
+    .bluebtn:active {
+        background: linear-gradient(cornflowerblue,royalblue);
+    }

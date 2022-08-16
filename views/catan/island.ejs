@@ -1,0 +1,87 @@
+<% const resource_color = { "木": "forestgreen", "泥": "sienna", "羊": "yellowgreen", "麦": "orange", "鉄": "mediumpurple", 荒: "tan" }; %>
+<% const port_color = { "木": "darkgreen", "泥": "sienna", "羊": "lawngreen", "麦": "orange", "鉄": "darkviolet", "３": "pink" }; %>
+<% const r = 35, w = r * Math.sqrt(3); %>
+<% function hexPoints(x, y, r, radian = 0) {
+    let points = "";
+    for (let i = 0; i < 6; i++)points += `${x + r * Math.cos(i * Math.PI / 3 + radian)},${y + r * Math.sin(i * Math.PI / 3 + radian)} `;
+    return points.trimEnd();
+} %>
+<% function settlementPoints(x, y, h) {
+    return `${x - h / 2},${y - h / 2} ${x - h / 2},${y + h / 2} ${x + h / 2},${y + h / 2} ${x + h / 2},${y - h / 2}`;
+} %>
+<polygon points="<%= hexPoints(0, 0, w * 3.2) %>" fill="dodgerblue"></polygon>
+<% for (let i = 0; i < game.coast.length; i++) { %>
+    <% const degree = 60 * i, kind = game.coast[i]; %>
+    <g transform="rotate(<%= degree %> 0 0)">
+        <% if (kind === "泥" || kind === "羊" || kind === "麦") { %>
+            <g class="port" transform="rotate(-30 <%= -w %> <%= -r * 3 %>)">
+                <text x="<%= -w %>" y="<%= -r * 3 - w * 3 / 4 %>" font-size="<%= r * 0.5 %>" fill="<%= port_color["３"] %>" text-anchor="middle">
+                    ３
+                </text>
+                <line x1="<%= -w - r / 2 %>" y1="<%= -r * 3 - w / 2 %>" x2="<%= -w - r / 4 %>" y2="<%= -r * 3 - w * 3 / 4 %>" stroke="black"></line>
+                <line x1="<%= -w + r / 2 %>" y1="<%= -r * 3 - w / 2 %>" x2="<%= -w + r / 4 %>" y2="<%= -r * 3 - w * 3 / 4 %>" stroke="black"></line>
+            </g>
+            <g class="port" transform="rotate(30 0 <%= -r * 3 %>)">
+                <text x="0" y="<%= -r * 3 - w * 3 / 4 %>" font-size="<%= r * 0.5 %>" fill="<%= port_color[kind] %>" text-anchor="middle">
+                    <%= kind %>
+                </text>
+                <line x1="<%= -r / 2 %>" y1="<%= -r * 3 - w / 2 %>" x2="<%= -r / 4 %>" y2="<%= -r * 3 - w * 3 / 4 %>" stroke="black"></line>
+                <line x1="<%= r / 2 %>" y1="<%= -r * 3 - w / 2 %>" x2="<%= r / 4 %>" y2="<%= -r * 3 - w * 3 / 4 %>" stroke="black"></line>
+            </g>
+        <% } else { %>
+            <g class="port" transform="rotate(-30 0 <%= -r * 3 %>)">
+                <text x="0" y="<%= -r * 3 - w * 3 / 4 %>" font-size="<%= r * 0.5 %>" fill="<%= port_color[kind] %>" text-anchor="middle">
+                    <%= kind %>
+                </text>
+                <line x1="<%= -r / 2 %>" y1="<%= -r * 3 - w / 2 %>" x2="<%= -r / 4 %>" y2="<%= -r * 3 - w * 3 / 4 %>" stroke="black"></line>
+                <line x1="<%= r / 2 %>" y1="<%= -r * 3 - w / 2 %>" x2="<%= r / 4 %>" y2="<%= -r * 3 - w * 3 / 4 %>" stroke="black"></line>
+            </g>
+        <% } %>
+    </g>
+<% } %>
+<% for (let i = 0; i < game.fsize; i++) { %>
+    <% for (let j = 0; j < game.fsize; j++) { %>
+        <% const k = i * game.fsize + j, x = w * ((j - 3) + (i - 3) / 2), y = r * 1.5 * (i - 3); %>
+        <% if (game.valid_face.includes(k)) { %>
+            <g class="face" transform="translate(<%= x %> <%= y %>)" data-index="<%= k %>">
+                <% const { resource, dice } = game.face[k]; %>
+                <polygon points="<%= hexPoints(0, 0, r, Math.PI / 6) %>" fill="<%= resource_color[resource] %>" stroke="black"></polygon>
+                <% if (resource !== "荒") { %>
+                    <circle cx="0" cy="0" r="<%= r * 0.32 %>" fill="peachpuff" stroke="black"></circle>
+                    <% const font_size = r * (4 / (6 + Math.abs(dice - 7))); %>
+                    <% if (Math.abs(dice - 7) === 1) { %>
+                        <text x="0" y="<%= font_size / 3 %>" font-size="<%= font_size %>" text-anchor="middle" fill="red"><%= dice %></text>
+                    <% } else { %>
+                        <text x="0" y="<%= font_size / 3 %>" font-size="<%= font_size %>" text-anchor="middle"><%= dice %></text>
+                    <% } %>
+                <% } %>
+                <% if (k === game.robber) { %>
+                    <g>
+                        <line x1="<%= -w * 0.3 %>" y1="<%= -w * 0.3 %>" x2="<%= w * 0.3 %>" y2="<%= w * 0.3 %>" stroke="black" stroke-width="4"></line>
+                        <line x1="<%= -w * 0.3 %>" y1="<%= w * 0.3 %>" x2="<%= w * 0.3 %>" y2="<%= -w * 0.3 %>" stroke="black" stroke-width="4"></line>
+                    </g>
+                <% } %>
+            </g>
+        <% } %>
+        <% if (game.valid_edge.includes(3 * k)) { %>
+            <% const stroke = game.edge[3 * k] != null ? player_color[game.edge[3 * k]] : "transparent"; %>
+            <line class="edge" x1="<%= x - w / 2 %>" y1="<%= y - r / 2 %>" x2="<%= x - w %>" y2="<%= y - r %>" stroke="<%= stroke %>" stroke-width="4" data-index="<%= 3 * k %>"></line>
+        <% } %>
+        <% if (game.valid_edge.includes(3 * k + 1)) { %>
+            <% const stroke = game.edge[3 * k + 1] != null ? player_color[game.edge[3 * k + 1]] : "transparent"; %>
+            <line class="edge" x1="<%= x - w / 2 %>" y1="<%= y - r / 2 %>" x2="<%= x %>" y2="<%= y - r %>" stroke="<%= stroke %>" stroke-width="4" data-index="<%= 3 * k + 1 %>"></line>
+        <% } %>
+        <% if (game.valid_edge.includes(3 * k + 2)) { %>
+            <% const stroke = game.edge[3 * k + 2] != null ? player_color[game.edge[3 * k + 2]] : "transparent"; %>
+            <line class="edge" x1="<%= x - w / 2 %>" y1="<%= y - r / 2 %>" x2="<%= x - w / 2 %>" y2="<%= y + r / 2 %>" stroke="<%= stroke %>" stroke-width="4" data-index="<%= 3 * k + 2 %>"></line>
+        <% } %>
+        <% if (game.valid_vertex.includes(2 * k)) { %>
+            <% const fill = game.vertex[2 * k] != null ? player_color[game.vertex[2 * k].owner] : "transparent"; %>
+            <polygon class="vertex" points="<%= settlementPoints(x - w, y - r, r / 3) %>" fill="<%= fill %>" data-index="<%= 2 * k %>"></polygon>
+        <% } %>
+        <% if (game.valid_vertex.includes(2 * k + 1)) { %>
+            <% const fill = game.vertex[2 * k + 1] != null ? player_color[game.vertex[2 * k + 1].owner] : "transparent"; %>
+            <polygon class="vertex" points="<%= settlementPoints(x - w / 2, y - r / 2, r / 3) %>" fill="<%= fill %>" data-index="<%= 2 * k + 1 %>"></polygon>
+        <% } %>
+    <% } %>
+<% } %>

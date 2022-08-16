@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/css/button.css">
+    <link rel="stylesheet" type="text/css" href="/css/machikoro.css">
+    <title>リモート街コロ</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/machikoro.js"></script>
+    <!-- @todo add animation -->
+</head>
+<body>
+    <input type="hidden" name="pc" value="<%= game.history.variation.length %>">
+<% if (game.dice[0] !== 0) { %>
+    <form name="dice_roll">
+        <div>
+            <img src="/img/dice/red_dice<%= game.dice[0] %>.svg" alt="<%= game.dice[0] %>" class="dice">
+            <% if (game.dice[1] !== 0) { %><img src="/img/dice/yellow_dice<%= game.dice[1] %>.svg" alt="<%= game.dice[1] %>" class="dice"><% } %>
+        </div>
+    <% if (myself === game.turn && game.chance > 0) { %>
+        <div>
+            <input type="button" name="proceed" value="OK">
+            <input type="button" name="revoke" value="振り直す">
+        </div>
+    <% } %>
+    </form>
+<% } %>
+<% if (game.currentPlayer.complete()) { %>
+    <form name="finish">
+        <input type="button" value="OK">
+    </form>
+<% } else if (myself === game.turn) { %>
+    <form name="action">
+    <% if (game.dice[0] === 0) { %>
+            <input type="button" name="roll_one_dice" value="ダイスを1個振る">
+        <% if (game.player[myself].landmarks["駅"] > 0) { %>
+            <input type="button" name="roll_two_dice" value="ダイスを2個振る">
+        <% } else { %>
+            <input type="button" name="roll_two_dice" value="ダイスを2個振る" disabled>
+        <% } %>
+    <% } else if (game.chance === 0) { %>
+        <% if (game.history.variation.reverse()[0].func !== "transact") { %>
+            <% if (game.player[myself].facilities["テレビ局"] > 0) { %>
+                <fieldset>
+                    <legend>テレビ局</legend>
+                <% for (let i = 1; i < game.player.length; i++) { %>
+                    <% const p = (myself + i) % game.player.length; %>
+                    <label><input type="radio" name="tv_target" value="<%= p %>" required><%= participant[p] %></label>
+                <% } %>
+                </fieldset>
+            <% } %>
+            <% if (game.player[myself].facilities["ビジネスセンター"] > 0) { %>
+                <% const exchangeable_facility_types = [
+                    "麦畑", "牧場", "パン屋", "カフェ", "コンビニ", "森林", "チーズ工場", "家具工場", "鉱山", "ファミレス", "リンゴ園", "青果市場"
+                ]; %>
+                <fieldset>
+                    <legend>ビジネスセンター</legend>
+                    自分の
+                    <select name="give" required>
+                    <% for (const exchangeable_facility_type of exchangeable_facility_types) { %>
+                        <% if (game.player[myself].facilities[exchangeable_facility_type] > 0) { %><option><%= exchangeable_facility_type %></option><% } %>
+                    <% } %>
+                    </select>と
+                    <select name="bc_target" required>
+                    <% for (let i = 1; i < game.player.length; i++) { %>
+                        <% const p = (myself + i) % game.player.length; %>
+                        <option value="<%= p %>"><%= participant[p] %></option>
+                    <% } %>
+                    </select>の
+                    <select name="take" required></select>を交換
+                </fieldset>
+            <% } %>
+            <input type="button" name="large_facility" value="決定">
+        <% } else { %>
+            <% const landmark_types = ["駅", "ショッピングモール", "遊園地", "電波塔"]; %>
+            <% const facility_types = [
+                "麦畑", "牧場", "パン屋", "カフェ", "コンビニ",
+                "森林", "スタジアム", "テレビ局", "ビジネスセンター", "チーズ工場",
+                "家具工場", "鉱山", "ファミレス", "リンゴ園", "青果市場"
+            ]; %>
+            <select name="card" required>
+                <option></option>
+                <optgroup label="ランドマーク">
+                <% for (const landmark_type of landmark_types) { %>
+                    <% if (game.player[myself].canPurchase(landmark_type)) { %><option><%= landmark_type %></option><% } %>
+                <% } %>
+                </optgroup>
+                <optgroup label="施設">
+                <% for (const facility_type of facility_types) { %>
+                    <% if (game.player[myself].canPurchase(facility_type)) { %><option><%= facility_type %></option><% } %>
+                <% } %>
+                </optgroup>
+            </select>
+            <input type="button" name="purchase" value="購入">
+            <input type="button" name="pass" value="購入しない">
+        <% } %>
+    <% } %>
+    </form>
+<% } %>
+    <div>
+        <% for (let i = 0; i < game.player.length; i++) { %>
+            <% const p = (myself + i) % game.player.length; %>
+        <% if (p === game.turn) { %>
+            <div class="player_area turn">
+        <% } else { %>
+            <div class="player_area">
+        <% } %>
+                <div class="name"><%= participant[p] %></div>
+                <div class="coin"><%= game.player[p].coin %>コイン</div>
+                <div class="landmarks">
+                    <% for (const [landmark, num] of Object.entries(game.player[p].landmarks)) { %>
+                        <span style="margin-right: 0.5em;"><%= landmark %>:<%= num %></span>
+                    <% } %>
+                </div>
+                <div class="facilities">
+                    <% for (const [facility, num] of Object.entries(game.player[p].facilities)) { %>
+                        <% if (num > 0) { %>
+                            <span style="margin-right: 0.5em;"><%= facility %>:<%= num %></span>
+                        <% } %>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>リモートカタン</title>
+    <link rel="stylesheet" type="text/css" href="/css/button.css">
+    <link rel="stylesheet" type="text/css" href="/css/catan.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/catan.js"></script>
+</head>
+<body>
+    <!-- @todo review CSS for buttons -->
+    <!-- @todo implement interface to receive user's operation -->
+    <input type="hidden" name="pc" value="<%= game.history.variation.length %>">
+    <% const player_color = ["red", "blue", "orangered", "white"]; %>
+    <div class="public_info">
+        <svg xmlns="http://www.w3.org/2000/svg" class="field_area" viewBox="-195 -170 420 340">
+            <%- include(`./island.ejs`, { game, player_color }) %>
+            <image x="150" y="-150" width="30" href="/img/dice/red_dice6.svg"/>
+            <image x="185" y="-150" width="30" href="/img/dice/yellow_dice1.svg"/>
+            <text x="144" y="102">発展カード</text>
+            <g id="developmentheap">
+                <rect x="163" y="110" width="42" height="55" rx="2" ry="2" stroke="black" fill="gray"></rect>
+                <text x="166" y="140" font-weight="bold" fill="blue">21枚</text>
+            </g>
+        </svg>
+        <div class="player_area_container">
+        <% for (let i = 0; i < game.player.length; i++) { %>
+            <% const p = (myself + i) % game.player.length; %>
+        <% if (p === game.turn) { %>
+            <div class="player_area turn">
+        <% } else { %>
+            <div class="player_area">
+        <% } %>
+                <div>
+                    <span class="symbol" style="background-color: <%= player_color[p] %>;"></span>
+                    <span><%= participant[p] %></span>
+                </div>
+                <div class="brief_info">
+                <% if (p === myself) { %>
+                    <span class="longest_road">交易路：<%= game.player[p].distance %></span>
+                <% } else { %>
+                    <span>交易路：<%= game.player[p].distance %></span>
+                <% } %>
+                <% if (p === myself) { %>
+                    <span class="largest_army">騎士力：<%= game.player[p].knightPower %></span>
+                <% } else { %>
+                    <span>騎士力：<%= game.player[p].knightPower %></span>
+                <% } %>
+                </div>
+                <div class="brief_info">
+                    <span>道：<%= game.remaining(p, "道") %></span>
+                    <span>開拓地：<%= game.remaining(p, "開拓地") %></span>
+                    <span>都市：<%= game.remaining(p, "都市") %></span>
+                </div>
+                <div class="brief_info">
+                    <span>手札：<%= game.player[p].handnum %></span>
+                    <span>得点：<%= game.score(p) %></span>
+                </div>
+                <div>
+            <% for (const c of game.player[p].chance) { %>
+                <% if (c.status === "used") { %>
+                    <div class="chance <%= c.status %>"><%= c.type %></div>
+                <% } else { %>
+                    <div class="chance <%= c.status %>"></div>
+                <% } %>
+            <% } %>
+                </div>
+            </div>
+        <% } %>
+        </div>
+    </div>
+    <div class="private_info">
+        <div class="hand">
+        <% for (const r in game.player[myself].hand) { %>
+            <% for (let j = 0; j < game.player[myself].hand[r]; j++) { %>
+            <label>
+                <input type="checkbox">
+                <span class="resource <%= r %>"><%= r %></span>
+            </label>
+            <% } %>
+        <% } %>
+        <% if (game.player[myself].handnum == 0) { %>
+            <p>手札はありません</p>
+        <% } %>
+        </div>
+        <div class="chance_container">
+        <% for (const c of game.player[myself].chance) { %>
+            <div class="chance <%= c.status %>"><%= c.type %></div>
+        <% } %>
+        <% if (game.player[myself].chance.length == 0) { %>
+            <p>所持している発展カードはありません</p>
+        <% } %>
+        </div>
+    </div>
+    <div id="navigation_root">
+    <% if (game.turn === myself && game.elapsed - 2 * game.player.length === game.history.variation.filter(x => x.func === "bless").length) { %>
+        <template id="dice_navigation_template" class="default_navigation">
+    <% } else { %>
+        <template id="dice_navigation_template">
+    <% } %>
+            <form name="dice_navigation">
+                <input type="button" class="bluebtn" value="サイコロを振る">
+            <% if (game.player[myself].chance.some(x => x.type === "騎士" && x.status === "unused") && game.executable) { %>
+                か騎士を発動
+            <% } %>
+            </form>
+        </template>
+        <template id="home_navigation_template">
+            <form name="home_navigation">
+                <input type="button" class="greenbtn" value="貿易">
+                <input type="button" class="greenbtn" value="交渉">
+                <input type="button" class="redbtn" value="ターン終了">
+            </form>
+        </template>
+    <% if (game.turn === myself && game.elapsed < 2 * game.player.length && game.history.variation.length % 3 === 1) { %>
+        <template id="road_construction_navigation_template" class="default_navigation">
+    <% } else { %>
+        <template id="road_construction_navigation_template">
+    <% } %>
+            <form name="road_construction_navigation">
+                <output name="e" class="projection"></output><span></span>
+                <input type="button" class="bluebtn" value="OK">
+            <% if (game.elapsed >= 2 * game.player.length) { %>
+                <input type="button" class="redbtn" value="キャンセル">
+            <% } %>
+            </form>
+        </template>
+    <% if (game.turn === myself && game.elapsed < 2 * game.player.length && game.history.variation.length % 3 === 0) { %>
+        <template id="settlement_construction_navigation_template" class="default_navigation">
+    <% } else { %>
+        <template id="settlement_construction_navigation_template">
+    <% } %>
+            <form name="settlement_construction_navigation">
+                <output name="v" class="projection"></output><span></span>
+                <input type="button" class="bluebtn" value="OK">
+            <% if (game.elapsed >= 2 * game.player.length) { %>
+                <input type="button" class="redbtn" value="キャンセル">
+            <% } %>
+            </form>
+        </template>
+        <template id="city_construction_navigation_template">
+            <form name="city_construction_navigation">
+                <output name="v" class="projection"></output><span></span>
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="development_navigation_template">
+            <form name="development_navigation">
+                発展カードを引きます
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="burst_navigation_template">
+            <form name="burst_navigation">
+                バーストしました（手札から捨てるカードを<%= Math.floor(game.player[myself].hand.length / 2) %>枚選択）
+                <input type="button" class="bluebtn" value="OK">
+            </form>
+        </template>
+        <template id="deprivation_navigation_template">
+            <form name="deprivation_navigation">
+                <input type="hidden" name="chance_index">
+                <fieldset>
+                    <legend>盗賊</legend>
+                    <output name="robber" class="projection"></output><span></span>
+                </fieldset>
+                <fieldset>
+                    <legend>資源を奪う対象</legend>
+                    <% for (let i = 0; i < game.player.length; i++) { %>
+                        <% const p = (myself + i) % game.player.length; %>
+                        <label>
+                            <input type="radio" name="target" value="<%= p %>" required>
+                            <span class="symbol" style="background-color: <%= player_color[p] %>;"></span>
+                            <span><%= participant[p] %></span>
+                        </label>
+                    <% } %>
+                </fieldset>
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="roadbuilding_navigation_template">
+            <form name="roadbuilding_navigation">
+                <input type="hidden" name="chance_index" required>
+                <fieldset>
+                    <legend>街道建設一本目</legend>
+                <% if (game.remaining(myself, "道") >= 1) { %>
+                    <output name="road1" class="projection"></output><span></span>
+                <% } else { %>
+                    <span>道が足りないため敷設できません</span>
+                <% } %>
+                </fieldset>
+                <fieldset>
+                    <legend>街道建設二本目</legend>
+                <% if (game.remaining(myself, "道") >= 2) { %>
+                    <output name="road2" class="projection"></output><span></span>
+                <% } else { %>
+                    <span>道が足りないため敷設できません</span>
+                <% } %>
+                </fieldset>
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="discovery_navigation_template">
+            <form name="discovery_navigation">
+                <input type="hidden" name="chance_index" required>
+                <fieldset>
+                    <legend>発見一つ目</legend>
+                    <label class="木"><input type="radio" name="discovery1" required>木</label>
+                    <label class="泥"><input type="radio" name="discovery1" required>泥</label>
+                    <label class="羊"><input type="radio" name="discovery1" required>羊</label>
+                    <label class="麦"><input type="radio" name="discovery1" required>麦</label>
+                    <label class="鉄"><input type="radio" name="discovery1" required>鉄</label>
+                </fieldset>
+                <fieldset>
+                    <legend>発見二つ目</legend>
+                    <label class="木"><input type="radio" name="discovery2" required>木</label>
+                    <label class="泥"><input type="radio" name="discovery2" required>泥</label>
+                    <label class="羊"><input type="radio" name="discovery2" required>羊</label>
+                    <label class="麦"><input type="radio" name="discovery2" required>麦</label>
+                    <label class="鉄"><input type="radio" name="discovery2" required>鉄</label>
+                </fieldset>
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="monopoly_navigation_template">
+            <form name="monopoly_navigation">
+                <input type="hidden" name="chance_index" required>
+                <fieldset>
+                    <legend>独占</legend>
+                    <label class="木"><input type="radio" name="monopoly" required>木</label>
+                    <label class="泥"><input type="radio" name="monopoly" required>泥</label>
+                    <label class="羊"><input type="radio" name="monopoly" required>羊</label>
+                    <label class="麦"><input type="radio" name="monopoly" required>麦</label>
+                    <label class="鉄"><input type="radio" name="monopoly" required>鉄</label>
+                </fieldset>
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="trade_navigation_template">
+            <form name="trade_navigation">
+                <fieldset>
+                    <legend>輸出</legend>
+                    <label class="木"><input type="radio" name="export">木</label>
+                    <label class="泥"><input type="radio" name="export">泥</label>
+                    <label class="羊"><input type="radio" name="export">羊</label>
+                    <label class="麦"><input type="radio" name="export">麦</label>
+                    <label class="鉄"><input type="radio" name="export">鉄</label>
+                </fieldset>
+                <fieldset>
+                    <legend>輸入</legend>
+                    <label class="木"><input type="radio" name="import">木</label>
+                    <label class="泥"><input type="radio" name="import">泥</label>
+                    <label class="羊"><input type="radio" name="import">羊</label>
+                    <label class="麦"><input type="radio" name="import">麦</label>
+                    <label class="鉄"><input type="radio" name="import">鉄</label>
+                </fieldset>
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="negotiation_navigation_template">
+            <form name="negotiation_navigation">
+                <fieldset>
+                    <legend>受け渡し</legend>
+                </fieldset>
+                <fieldset>
+                    <legend>受け取り</legend>
+                </fieldset>
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+        <template id="turn_end_navigation_template">
+            <form name="turn_end_navigation">
+                ターンを終了します
+                <input type="button" class="bluebtn" value="OK">
+                <input type="button" class="redbtn" value="キャンセル">
+            </form>
+        </template>
+    </div>
+</body>
+</html>

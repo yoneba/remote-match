@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/css/button.css">
+    <link rel="stylesheet" type="text/css" href="/css/napoleon.css">
+    <title>リモートナポ</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="/js/napoleon.js"></script>
+    <!-- @todo add animation -->
+</head>
+<body>
+    <input type="hidden" name="pc" value="<%= game.history.variation.length %>">
+    <div class="frame">
+        <% function cardURI (card, masquerade) {
+            const translator = { "スペード": "spade", "ハート": "heart", "ダイヤ": "diamond", "クラブ": "club" };
+            const suffix = masquerade in translator ? "_" + translator[masquerade] : "";
+            if (card === "エクストラジョーカー") return `/img/playing-cards/extra_joker${suffix}.svg`;
+            if (card === "赤ジョーカー") return `/img/playing-cards/red_joker${suffix}.svg`;
+            if (card === "黒ジョーカー") return `/img/playing-cards/black_joker${suffix}.svg`;
+            let [suit, rank] = card.split("の");
+            if (rank === "A") rank = "1";
+            if (rank === "J") rank = "jack";
+            if (rank === "Q") rank = "queen";
+            if (rank === "K") rank = "king";
+            suit = translator[suit];
+            return `/img/playing-cards/${rank}_${suit}.svg`;
+        } %>
+        <%- include(`./graphics${participant.length}.ejs`, { myself , participant , game, cardURI }) %>
+        <!-- @todo consider use of <dialog> -->
+    <% if (game.napoleon == null && game.turn === myself) { %>
+        <div id="bid_dialog" class="modal">
+            <h3>宣言してください</h3>
+            <form name="bid">
+                <div>
+                    <select name="declaration" required>
+                    <% for (let j = game.contract; j <= 20; j++) { %>
+                        <option><%= j %></option>
+                    <% } %>
+                    </select>
+                </div>
+                <input type="button" class="standalonebtn bluebtn" value="立候補">
+                <input type="button" class="standalonebtn redbtn" value="降りる">
+            </form>
+        </div>
+    <% } %>
+    <% if (game.napoleon === myself && game.trump == null) { %>
+        <div id="designation_dialog" class="modal">
+            <form name="designation">
+                <fieldset>
+                    <legend>切り札</legend>
+                    <div class="hidden_radio">
+                        <label class="spade"><input type="radio" name="trump" value="スペード" required><span>♠</span></label>
+                        <label class="heart"><input type="radio" name="trump" value="ハート"><span>♥</span></label>
+                        <label class="diamond"><input type="radio" name="trump" value="ダイヤ"><span>♦</span></label>
+                        <label class="club"><input type="radio" name="trump" value="クラブ"><span>♣</span></label>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>副官指定カード</legend>
+                    <div>
+                        <select name="medal" required>
+                            <option></option>
+                            <option>マイティ</option>
+                            <option>エクストラジョーカー</option>
+                            <option>赤ジョーカー</option>
+                            <option>黒ジョーカー</option>
+                            <option>正ジャック</option>
+                            <option>裏ジャック</option>
+                            <option>その他</option>
+                        </select>
+                    </div>
+                    <div>
+                        <select name="medal_suit" required disabled>
+                            <option>スペード</option>
+                            <option>ハート</option>
+                            <option>ダイヤ</option>
+                            <option>クラブ</option>
+                        </select>
+                        の
+                        <select name="medal_rank" required disabled>
+                            <option>A</option>
+                            <option>K</option>
+                            <option>Q</option>
+                            <option>J</option>
+                            <option>10</option>
+                            <option>9</option>
+                            <option>8</option>
+                            <option>7</option>
+                            <option>6</option>
+                            <option>5</option>
+                            <option>4</option>
+                            <option>3</option>
+                            <option>2</option>
+                        </select>
+                    </div>
+                </fieldset>
+                <input type="button" class="standalonebtn bluebtn" value="決定">
+            </form>
+        </div>
+    <% } %>
+    <% if (game.player[myself].hand.length > Math.floor(50 / participant.length)) { %>
+        <button id="discard_button" class="standalonebtn bluebtn" disabled>捨てる</button>
+    <% } %>
+    <% if (game.napoleon != null && game.turn === myself) { %>
+        <div id="request_dialog" class="modal">
+            <h3>スートを選択してください</h3>
+            <form name="joker_suit">
+                <input type="hidden" name="index" required>
+                <div class="hidden_radio" style="margin-bottom: 0.7em;">
+                    <label class="spade"><input type="radio" name="request" value="スペード" required><span>♠</span></label>
+                    <label class="heart"><input type="radio" name="request" value="ハート"><span>♥</span></label>
+                    <label class="diamond"><input type="radio" name="request" value="ダイヤ"><span>♦</span></label>
+                    <label class="club"><input type="radio" name="request" value="クラブ"><span>♣</span></label>
+                </div>
+                <input type="reset" class="standalonebtn redbtn" value="キャンセル">
+            </form>
+        </div>
+    <% } %>
+    <% if (game.winner !== "") { %>
+        <div id="result_dialog" class="modal">
+        <% if (game.winner === "ナポレオン軍") { %>
+            <h2 style="color: blue;">ナポレオン軍の勝利！</h2>
+        <% } else if (game.winner === "連合軍") { %>
+            <h2 style="color: red;">連合軍の勝利！</h2>
+        <% } %>
+            <form name="finish">
+                <input type="button" class="standalonebtn bluebtn" value="OK">
+            </form>
+        </div>
+    <% } %>
+    </div>
+</body>
+</html>

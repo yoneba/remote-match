@@ -1,0 +1,173 @@
+'use strict';
+
+/** @todo brushup entirely */
+
+const CatanModel = require("../model.js");
+
+const distribution = [
+    null, null, null, null, null, null, null,
+    null, null, null, { "resource": "羊", "dice": 9 }, { "resource": "泥", "dice": 8 }, { "resource": "鉄", "dice": 4 }, null,
+    null, null, { "resource": "木", "dice": 3 }, { "resource": "荒", "dice": 1 }, { "resource": "泥", "dice": 3 }, { "resource": "木", "dice": 12 }, null,
+    null, { "resource": "鉄", "dice": 10 }, { "resource": "木", "dice": 11 }, { "resource": "麦", "dice": 8 }, { "resource": "麦", "dice": 4 }, { "resource": "鉄", "dice": 5 }, null,
+    null, { "resource": "木", "dice": 6 }, { "resource": "羊", "dice": 2 }, { "resource": "羊", "dice": 10 }, { "resource": "羊", "dice": 6 }, null, null,
+    null, { "resource": "泥", "dice": 11 }, { "resource": "麦", "dice": 9 }, { "resource": "麦", "dice": 5 }, null, null, null,
+    null, null, null, null, null, null, null
+];
+
+test("random", () => {
+    const game = new CatanModel;
+    game.bless();
+    game.develop(0);
+    game.rob(2, 24, 3);
+});
+
+test("progress", () => {
+    const game = new CatanModel(4, distribution, ["木", "泥", "羊", "麦", "鉄", "３"]);
+    expect(game.turn).toBe(0);
+    expect(game.elapsed).toBe(0);
+    game.buildSettlement(0, 66);
+    game.buildRoad(0, 99);
+    game.turnEnd();
+    expect(game.turn).toBe(1);
+    expect(game.elapsed).toBe(1);
+    game.buildSettlement(1, 78);
+    game.buildRoad(1, 117);
+    game.turnEnd();
+    expect(game.turn).toBe(2);
+    expect(game.elapsed).toBe(2);
+    game.buildSettlement(2, 60);
+    game.buildRoad(2, 71);
+    game.turnEnd();
+    expect(game.turn).toBe(3);
+    expect(game.elapsed).toBe(3);
+    game.buildSettlement(3, 38);
+    game.buildRoad(3, 38);
+    game.turnEnd();
+    expect(game.turn).toBe(3);
+    expect(game.elapsed).toBe(4);
+    game.buildSettlement(3, 64);
+    game.buildRoad(3, 77);
+    game.turnEnd();
+    expect(game.turn).toBe(2);
+    expect(game.elapsed).toBe(5);
+    game.buildSettlement(2, 23);
+    game.buildRoad(2, 35);
+    game.turnEnd();
+    expect(game.turn).toBe(1);
+    expect(game.elapsed).toBe(6);
+    game.buildSettlement(1, 74);
+    game.buildRoad(1, 111);
+    game.turnEnd();
+    expect(game.turn).toBe(0);
+    expect(game.elapsed).toBe(7);
+    game.buildSettlement(0, 62);
+    game.buildRoad(0, 93);
+    game.turnEnd();
+    expect(game.player[0].hand).toEqual({ "木": 1, "泥": 0, "羊": 1, "麦": 1, "鉄": 0 });
+    expect(game.player[1].hand).toEqual({ "木": 1, "泥": 1, "羊": 1, "麦": 0, "鉄": 1 });
+    expect(game.player[2].hand).toEqual({ "木": 0, "泥": 1, "羊": 1, "麦": 0, "鉄": 0 });
+    expect(game.player[3].hand).toEqual({ "木": 0, "泥": 0, "羊": 1, "麦": 2, "鉄": 0 });
+    expect(game.turn).toBe(0);
+    expect(game.elapsed).toBe(8);
+    game.bless(6);
+    game.turnEnd();
+    expect(game.turn).toBe(1);
+    expect(game.elapsed).toBe(9);
+    game.bless(8);
+    game.turnEnd();
+    expect(game.turn).toBe(2);
+    expect(game.elapsed).toBe(10);
+    game.bless(11);
+    expect(game.player[2].afford("道")).toBeTruthy();
+    game.buildRoad(2, 69);
+    expect(game.player[2].hand).toEqual({ "木": 1, "泥": 1, "羊": 1, "麦": 0, "鉄": 0 });
+    expect(game.remaining(2, "道")).toBe(12);
+    expect(game.player[2].distance).toBe(2);
+    expect(game.player[2].afford("開拓地")).toBeFalsy();
+    game.buildSettlement(2, 89);
+    expect(game.player[2].hand).toEqual({ "木": 0, "泥": 0, "羊": 0, "麦": 0, "鉄": 0 });
+    expect(game.remaining(2, "開拓地")).toBe(2);
+    expect(game.score(2)).toBe(3);
+    game.turnEnd();
+    expect(game.turn).toBe(3);
+    expect(game.elapsed).toBe(11);
+    game.bless(9);
+    expect(game.player[3].afford("道")).toBeFalsy();
+    expect(game.player[3].afford("開拓地")).toBeFalsy();
+    expect(game.player[3].afford("都市")).toBeFalsy();
+    expect(game.player[3].afford("発展")).toBeFalsy();
+    game.turnEnd();
+    expect(game.turn).toBe(0);
+    expect(game.elapsed).toBe(12);
+    expect(game.player[0].hand).toEqual({ "木": 0, "泥": 2, "羊": 3, "麦": 0, "鉄": 0 });
+    expect(game.player[0].handnum).toBe(5);
+    expect(game.player[1].hand).toEqual({ "木": 1, "泥": 0, "羊": 1, "麦": 0, "鉄": 1 });
+    expect(game.player[1].handnum).toBe(3);
+    expect(game.player[2].hand).toEqual({ "木": 0, "泥": 0, "羊": 0, "麦": 2, "鉄": 0 });
+    expect(game.player[2].handnum).toBe(2);
+    expect(game.player[3].hand).toEqual({ "木": 0, "泥": 1, "羊": 1, "麦": 3, "鉄": 0 });
+    expect(game.player[3].handnum).toBe(5);
+    game.bless(5);
+    game.turnEnd();
+    game.bless(4);
+    expect(game.player[1].afford("発展")).toBeTruthy();
+    game.develop(1, "騎士");
+    expect(game.player[1].hand).toEqual({ "木": 1, "泥": 0, "羊": 0, "麦": 0, "鉄": 1 });
+    expect(game.player[1].chance).toEqual([{ type: "騎士", status: "unused" }]);
+    expect(game.executable).toBeTruthy();
+    game.turnEnd();
+    game.bless(3);
+    game.turnEnd();
+    game.bless(7);
+    game.burst(3, { "木": 0, "泥": 2, "羊": 0, "麦": 2, "鉄": 0 });
+    expect(game.player[3].hand).toEqual({ "木": 0, "泥": 0, "羊": 1, "麦": 2, "鉄": 1 });
+    game.rob(3, 32, 0, "羊");
+    expect(game.robber).toBe(32);
+    game.turnEnd();
+    expect(game.player[0].hand).toEqual({ "木": 0, "泥": 2, "羊": 2, "麦": 1, "鉄": 1 });
+    expect(game.player[1].hand).toEqual({ "木": 1, "泥": 0, "羊": 0, "麦": 0, "鉄": 1 });
+    expect(game.player[2].hand).toEqual({ "木": 0, "泥": 0, "羊": 0, "麦": 2, "鉄": 0 });
+    expect(game.player[3].hand).toEqual({ "木": 0, "泥": 0, "羊": 2, "麦": 2, "鉄": 1 });
+    game.bless(6);
+    game.develop(0, "発見");
+    expect(game.player[0].chance).toEqual([{ type: "発見", status: "unused" }]);
+    game.turnEnd();
+    game.bless(10);
+    game.turnEnd();
+    game.bless(12);
+    game.develop(2, "街道建設");
+    expect(game.player[2].chance).toEqual([{ type: "街道建設", status: "unused" }]);
+    game.turnEnd();
+    game.bless(2);
+    game.develop(3, "得点");
+    expect(game.player[3].chance).toEqual([{ type: "得点", status: "unused" }]);
+    expect(game.score(3)).toBe(3);
+    expect(game.development).toEqual({ "騎士": 13, "街道建設": 1, "発見": 1, "独占": 2, "得点": 4 });
+    game.turnEnd();
+    expect(game.player[0].hand).toEqual({ "木": 0, "泥": 2, "羊": 1, "麦": 0, "鉄": 0 });
+    expect(game.player[1].hand).toEqual({ "木": 2, "泥": 0, "羊": 1, "麦": 0, "鉄": 1 });
+    expect(game.player[2].hand).toEqual({ "木": 1, "泥": 0, "羊": 0, "麦": 1, "鉄": 0 });
+    expect(game.player[3].hand).toEqual({ "木": 0, "泥": 0, "羊": 2, "麦": 1, "鉄": 0 });
+    game.bless(5);
+    game.turnEnd();
+    game.executeChanceCard(1, 0, 16, null);
+    expect(game.player[1].chance).toEqual([{ type: "騎士", status: "used" }]);
+    expect(game.player[1].knightPower).toBe(1);
+    expect(game.executable).toBeFalsy();
+    game.bless(5);
+    expect(game.player[1].afford("都市")).toBeTruthy();
+    game.buildCity(1, 78);
+    expect(game.remaining(1, "開拓地")).toBe(4);
+    expect(game.remaining(1, "都市")).toBe(3);
+    expect(game.score(1)).toBe(3);
+    game.turnEnd();
+    game.bless(11);
+    game.buildRoad(2, 89);
+    game.turnEnd();
+    game.bless(8);
+    game.turnEnd();
+    expect(game.player[0].hand).toEqual({ "木": 0, "泥": 3, "羊": 1, "麦": 0, "鉄": 2 });
+    expect(game.player[1].hand).toEqual({ "木": 2, "泥": 0, "羊": 1, "麦": 0, "鉄": 0 });
+    expect(game.player[2].hand).toEqual({ "木": 1, "泥": 0, "羊": 0, "麦": 1, "鉄": 0 });
+    expect(game.player[3].hand).toEqual({ "木": 0, "泥": 1, "羊": 2, "麦": 2, "鉄": 0 });
+});

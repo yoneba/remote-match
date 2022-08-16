@@ -1,0 +1,37 @@
+{
+  "name": "remote-match",
+  "version": "1.0.0",
+  "description": "Online match application. This provides Napoleon, Catan, Machikoro, and Dancing criminal.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest --coverage",
+    "ejslint": "ejslint ./views/napoleon/index.ejs"
+  },
+  "keywords": [
+    "network",
+    "online",
+    "remote",
+    "match",
+    "game",
+    "napoleon",
+    "catan",
+    "dancing",
+    "criminal"
+  ],
+  "author": "Yuma",
+  "license": "ISC",
+  "devDependencies": {
+    "ejs-lint": "^1.2.0",
+    "jest": "^25.5.4",
+    "supertest": "^4.0.2"
+  },
+  "dependencies": {
+    "compression": "^1.7.4",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
+    "express-session": "^1.17.2",
+    "memorystore": "^1.6.6",
+    "socket.io": "^2.4.1"
+  }
+}

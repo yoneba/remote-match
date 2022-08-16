@@ -1,0 +1,171 @@
+@charset "utf-8";
+
+body {
+    background-color: darkgray;
+}
+
+.field_area {
+    background-color: sandybrown;
+}
+
+.player_area {
+    border: black solid thin;
+    padding: 0.1em 0.4em;
+    margin-bottom: 0.5em;
+}
+
+.turn {
+    border-color: gold !important;
+    border-width: medium !important;
+}
+
+.symbol {
+    vertical-align: middle;
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+}
+
+.longest_road {
+    font-weight: bold;
+    background-color: firebrick;
+}
+
+.largest_army {
+    font-weight: bold;
+    background-color: deepskyblue;
+}
+
+.brief_info {
+    display: inline-flex;
+    flex-wrap: wrap;
+}
+
+.brief_info > span {
+    padding: 0 0.2em;
+    margin-right: 0.7em;
+}
+
+.chance {
+    display: inline-block;
+    border: black solid thin;
+}
+
+.private_info {
+    border: black solid thin;
+}
+
+.private_info .hand {
+    padding: 0.2em;
+}
+
+.private_info .hand input[type='checkbox'] {
+    display: none;
+}
+/*
+.button_collection {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.button_collection > input[type='button'] {
+    margin: unset;
+    margin-left: 0.5em;
+    width: unset;
+    font-size: large;
+}
+*/
+.resource {
+    display: inline-block;
+    padding: 0.2em 0.3em;
+    color: black;
+    border: black solid thin;
+    font-size: large;
+    font-weight: bold;
+}
+
+input[type='checkbox']:checked + .resource, input[type='radio']:checked + .resource {
+    border: red solid medium;
+}
+
+.木 { background-color: darkgreen; }
+.泥 { background-color: saddlebrown; }
+.羊 { background-color: limegreen; }
+.麦 { background-color: darkorange; }
+.鉄 { background-color: slateblue; }
+.荒 { background-color: darkgoldenrod; }
+
+#navigation_root {
+    border: solid black thin;
+}
+
+#navigation_root > form output.projection {
+    display: none;
+}
+
+form[name='road_construction_navigation'] output.projection + span::before {
+    content: '選択した位置に道を建設します';
+}
+
+form[name='road_construction_navigation'] output.projection:empty + span::before {
+    content: '道を建設したい位置をクリック';
+}
+
+form[name='settlement_construction_navigation'] output.projection + span::before {
+    content: '選択した位置に開拓地を建設します';
+}
+
+form[name='settlement_construction_navigation'] output.projection:empty + span::before {
+    content: '開拓地を建設したい位置をクリック';
+}
+
+form[name='city_construction_navigation'] output.projection + span::before {
+    content: '選択した位置の開拓地を都市化します';
+}
+
+form[name='city_construction_navigation'] output.projection:empty + span::before {
+    content: '都市を建設したい位置をクリック';
+}
+
+form[name='deprivation_navigation'] output.projection + span::before {
+    content: '選択した位置に盗賊を移動させます';
+}
+
+form[name='deprivation_navigation'] output.projection:empty + span::before {
+    content: '盗賊を移動させたい位置をクリック';
+}
+
+form[name='roadbuilding_navigation_template'] output.projection + span::before {
+    content: '選択した位置に道を建設します';
+}
+
+form[name='roadbuilding_navigation_template'] output.projection:empty + span::before {
+    content: '道を建設したい位置をクリック';
+}
+
+@media screen and (min-width:600px) {
+    .public_info {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+    .field_area {
+        width: 66%;
+    }
+    .player_area_container {
+        width: 33%;
+    }
+}
+
+@media screen and (max-width:599px) {
+    .player_area_container {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+    .player_area {
+        width: 44%;
+    }
+}

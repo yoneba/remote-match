@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+        <title>ログイン</title>
+        <link rel="stylesheet" type="text/css" href="/css/button.css">
+        <link rel="stylesheet" type="text/css" href="/css/entry.css">
+        <script type="module">
+            const form = document.querySelector("form");
+            form.elements["entry"][0].onclick = function () {
+                form.elements["room_id_field"].style.display = "none";
+                form.elements["room_id"].disabled = true;
+            };
+            form.elements["entry"][1].onclick = function () {
+                form.elements["room_id_field"].style.display = "initial";
+                form.elements["room_id"].disabled = false;
+            };
+            form.elements["entry"][0].click();
+        </script>
+    </head>
+    <body>
+        <form method="POST">
+            <fieldset>
+                <label>
+                    名前を入力してください
+                    <input type="text" name="user_name" maxlength="5" autofocus required>
+                </label>
+            </fieldset>
+            <fieldset>
+                <label><input type="radio" name="entry" value="new" checked>新規に部屋を作成</label>
+                <label><input type="radio" name="entry" value="existing">既存の部屋に入室</label>
+            </fieldset>
+            <fieldset name="room_id_field">
+                <label>
+                    部屋番号(数字4桁)を入力してください
+                    <input type="number" name="room_id" min="1000" max="9999" required>
+                </label>
+            </fieldset>
+            <input type="submit" class="standalonebtn bluebtn" value="入室">
+        </form>
+    </body>
+</html>

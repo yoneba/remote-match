@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" style="background-color: green;">
+<% function computeInterval (position) {
+    if (game.player[(myself + position) % participant.length].hand.length > Math.floor(50 / participant.length)) {
+        if (position === 0) return 19;
+        else return 7;
+    }
+    else {
+        if (position === 0) return 30;
+        else return 11;
+    }
+} %>
+<% for (let i = 0; i < participant.length; i++) { %>
+    <% const p = (myself + i) % participant.length; %>
+    <g class="player_area">
+    <% if (i === 0) { %>
+        <g class="box" transform="translate(5,275)">
+    <% } else if (i === 1) { %>
+        <g class="box" transform="translate(5,90)">
+    <% } else if (i === 2) { %>
+        <g class="box" transform="translate(160,5)">
+    <% } else if (i === 3) { %>
+        <g class="box" transform="translate(330,5)">
+    <% } else if (i === 4) { %>
+        <g class="box" transform="translate(485,90)">
+    <% } %>
+        <% if (p === game.turn) { %>
+            <rect width="150" height="80" stroke-width="3" stroke="red" fill="white"></rect>
+        <% } else { %>
+            <rect width="150" height="80" stroke="black" fill="white"></rect>
+        <% } %>
+            <text x="5" y="15"><%= participant[p] %></text>
+        <% if (p === game.napoleon) { %>
+            <text x="90" y="15" font-weight="bold" fill="blue">ナポ</text>
+        <% } else if (p === game.adjutant && (myself === game.adjutant || !game.player[game.adjutant].hand.includes(game.translate(game.medal)) || game.winner !== "")) { %>
+            <text x="90" y="15" font-weight="bold" fill="dodgerblue">副官</text>
+        <% } %>
+            <text x="130" y="15"><%= game.player[p].obtained.length %></text>
+        <% if (game.napoleon != null) { %>
+            <% for (let j = 0; j < game.player[p].obtained.length; j++) { %>
+                <image href="<%= cardURI(game.player[p].obtained[j]) %>" transform="translate(<%= 2 + 9 * j %>,20) scale(0.24)"/>
+            <% } %>
+        <% } else if (game.player[p].bid === 0) { %>
+            <text x="35" y="60" font-size="xx-large">パス</text>
+        <% } else if (game.player[p].bid != null) { %>
+            <text x="35" y="60" font-size="xx-large"><%= game.player[p].bid %>枚</text>
+        <% } %>
+        </g>
+    <% if (i === 0) { %>
+        <g class="hand" transform="translate(160,285)">
+    <% } else if (i === 1) { %>
+        <g class="hand" transform="translate(5,175)">
+    <% } else if (i === 2) { %>
+        <g class="hand" transform="translate(5,10)">
+    <% } else if (i === 3) { %>
+        <g class="hand" transform="translate(485,10)">
+    <% } else if (i === 4) { %>
+        <g class="hand" transform="translate(485,175)">
+    <% } %>
+        <% for (let j = 0; j < game.player[p].hand.length; j++) { %>
+            <% if (i === 0) { %>
+                <% if (game.player[myself].hand.length > Math.floor(50 / participant.length)) { %>
+                    <image href="<%= cardURI(game.player[p].hand[j]) %>" class="disposable" transform="translate(<%= computeInterval(i) * j %>,0) scale(0.3)"/>
+                <% } else if (game.history.variation.every(x => x.func !== "discard") || game.winner !== "" || game.turn !== myself || game.layout[myself] != null) { %>
+                    <image href="<%= cardURI(game.player[p].hand[j]) %>" transform="translate(<%= computeInterval(i) * j %>,0) scale(0.3)"/>
+                <% } else if (game.availableCards().includes(j)) { %>
+                    <image href="<%= cardURI(game.player[p].hand[j]) %>" class="available" transform="translate(<%= computeInterval(i) * j %>,0) scale(0.3)"/>
+                <% } else { %>
+                    <image href="<%= cardURI(game.player[p].hand[j]) %>" filter="brightness(0.6)" transform="translate(<%= computeInterval(i) * j %>,0) scale(0.3)"/>
+                <% } %>
+            <% } else { %>
+                <image href="/img/playing-cards/back.svg" transform="translate(<%= computeInterval(i) * j %>,0) scale(0.3)"/>
+            <% } %>
+        <% } %>
+        </g>
+    </g>
+<% } %>
+    <g class="layout">
+    <% if (game.layout[myself] != null) { %>
+        <image href="<%= cardURI(game.layout[myself], game.constraint[0]) %>" transform="translate(295,210) scale(0.3)"/>
+    <% } %>
+    <% if (game.layout[(myself + 1) % participant.length] != null) { %>
+        <image href="<%= cardURI(game.layout[(myself + 1) % participant.length], game.constraint[0]) %>" transform="translate(230,165) scale(0.3)"/>
+    <% } %>
+    <% if (game.layout[(myself + 2) % participant.length] != null) { %>
+        <image href="<%= cardURI(game.layout[(myself + 2) % participant.length], game.constraint[0]) %>" transform="translate(265,90) scale(0.3)"/>
+    <% } %>
+    <% if (game.layout[(myself + 3) % participant.length] != null) { %>
+        <image href="<%= cardURI(game.layout[(myself + 3) % participant.length], game.constraint[0]) %>" transform="translate(325,90) scale(0.3)"/>
+    <% } %>
+    <% if (game.layout[(myself + 4) % participant.length] != null) { %>
+        <image href="<%= cardURI(game.layout[(myself + 4) % participant.length], game.constraint[0]) %>" transform="translate(360,165) scale(0.3)"/>
+    <% } %>
+    </g>
+    <g class="discarded">
+    <% for (let j = 0; j < game.kitty.length; j++) { %>
+        <% if (game.history.variation.some(x => x.func === "discard") && game.kitty[j].match(/(10|J|Q|K|A)$/)) { %>
+            <image href="<%= cardURI(game.kitty[j]) %>" transform="translate(<%= 500 + 20 * j %>,250) scale(0.24)"/>
+        <% } else { %>
+            <image href="/img/playing-cards/back.svg" transform="translate(<%= 500 + 20 * j %>,250) scale(0.24)"/>
+        <% } %>
+    <% } %>
+    </g>
+<% if (game.trump != null) { %>
+    <g class="info" transform="translate(490,310)">
+        <rect width="150" height="50" stroke="none" fill="lightsalmon"></rect>
+        <text x="5" y="22">
+        <% if (game.trump === "スペード") { %>
+            <tspan font-size="larger" fill="black">♠</tspan>
+        <% } else if (game.trump === "ハート") { %>
+            <tspan font-size="larger" fill="red">♥</tspan>
+        <% } else if (game.trump === "ダイヤ") { %>
+            <tspan font-size="larger" fill="red">♦</tspan>
+        <% } else if (game.trump === "クラブ") { %>
+            <tspan font-size="larger" fill="black">♣</tspan>
+        <% } %>
+            <tspan><%= game.contract %>枚</tspan>
+        </text>
+    <% if (game.history.variation.some(x => x.func === "discard")) { %>
+        <g class="rotation">
+            <path d="M 115 22 A 10,10 0 1,1 125 22" stroke-width="3" stroke="purple" fill="none"></path>
+        <% if (game.rotation === 1) { %>
+            <polygon points="131,24.5 123,16.5 122,25.5" stroke="none" fill="purple"></polygon>
+        <% } else { %>
+            <polygon points="109,24.5 117,16.5 118,25.5" stroke="none" fill="purple"></polygon>
+        <% } %>
+        </g>
+    <% } %>
+    <% if (game.medal === "エクストラジョーカー") { %>
+        <text x="5" y="42" textLength="140" lengthAdjust="spacingAndGlyphs">エクストラジョーカー</text>
+    <% } else { %>
+        <text x="5" y="42"><%= game.medal %></text>
+    <% } %>
+    </g>
+<% } %>
+<% if (game.napoleon === game.adjutant && game.layout[(game.turn - game.rotation + game.player.length) % game.player.length] === game.medal) { %>
+    <g font-size="50" font-weight="bold" opacity="0">
+        <text x="215" y="-50">
+            自
+            <animate attributeName="y" from="-50" to="190" begin="0s" dur="0.6s" calcMode="spline" keyTimes="0;1" keySplines="0.33 0.0 0.67 0.33" fill="freeze" />
+        </text>
+        <text x="295" y="-50">
+            引
+            <animate attributeName="y" from="-50" to="190" begin="0.6s" dur="0.6s" calcMode="spline" keyTimes="0;1" keySplines="0.33 0.0 0.67 0.33" fill="freeze" />
+        </text>
+        <text x="375" y="-50">
+            き
+            <animate attributeName="y" from="-50" to="190" begin="1.2s" dur="0.6s" calcMode="spline" keyTimes="0;1" keySplines="0.33 0.0 0.67 0.33" fill="freeze" />
+        </text>
+        <animate attributeName="opacity" values="1;1;0" keyTimes="0;0.5;1" dur="5s" restart="never" />
+    </g>
+<% } %>
+</svg>

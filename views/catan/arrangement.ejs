@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>カタン初期配置</title>
+    <style>
+        div.container {
+            font-size: 10vw;
+            margin-top:0.5em;
+        }
+        div.container > div {
+            display: flex;
+            justify-content: space-around;
+        }
+        div.container > div > div {
+            width: 10vw;
+            text-align: center;
+        }
+        div.container > div:nth-child(4n+1) { margin: 0 20vw; }
+        div.container > div:nth-child(2n) { margin: 0 10vw; }
+
+        .木 { color: darkgreen; }
+        .泥 { color: brown; }
+        .羊 { color: limegreen; }
+        .麦 { color: darkorange; }
+        .鉄 { color: slateblue; }
+        .荒 { color: darkgoldenrod; }
+
+        .influential { color: red; }
+    </style>
+</head>
+
+<body>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 340">
+        <g transform="translate(195 170)">
+            <%- include(`./island.ejs`, { game: field, player_color: ["red", "blue", "orangered", "white"] }) %>
+        </g>
+    </svg>
+    <div class="container">
+        <% for (let i = 1; i < field.fsize - 1; i++) { %>
+            <div>
+                <% for (let j = 1; j < field.fsize - 1; j++) {
+                    const tile = field.face[i * field.fsize + j];
+                    if (tile != null) { %>
+                        <div class="<%= tile.resource %>"><%= tile.resource %></div>
+                    <% }
+                } %>
+            </div>
+        <% } %>
+    </div>
+    <div class="container">
+        <% for (let i = 1; i < field.fsize - 1; i++) { %>
+            <div>
+                <% for (let j = 1; j < field.fsize - 1; j++) {
+                    const tile = field.face[i * field.fsize + j];
+                    if (tile != null) {
+                        if (tile.dice === 6 || tile.dice === 8) { %>
+                            <div class="influential"><%= tile.dice %></div>
+                        <% }
+                        else { %>
+                            <div><%= tile.dice %></div>
+                        <% }
+                    }
+                } %>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>
